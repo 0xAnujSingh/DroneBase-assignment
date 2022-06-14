@@ -1,5 +1,4 @@
-import bcrypt
-from app import Users
+from src.user import Users
 
 # def login(id, password):
 #     for i in range(3):

@@ -1,18 +1,13 @@
+import sys
+sys.path.append('/home/anuj/Desktop/droneBase')
+
 import sqlite3
-from db import conn
+from database.db import conn
 
-class Users:
-    def __init__(self, userName, password):
-        self.id = id
-        self.userName = userName
-        self.password = password
-
-        def show(self):
-            print(self.userName)
-
-Users().show()
-
-
+class User:
+    def __init__(self, id, userName):
+        self.id = id 
+        self.username = userName
 
     @classmethod
     def createNew(cls, userName, password):
@@ -20,17 +15,20 @@ Users().show()
         data = None
 
         try:
-            cursor.execute("INSERT INTO users(`user_name`, `passsword`) VALUES (?,?);", (userName, password))
-            cursor.execute("SELECT `id`, `user_name` FROM users WHERE `id` = ?", (cursor.lastrowid, ))
+            cursor.execute("INSERT INTO users(`username`, `password`) VALUES (?,?);", (userName, password))
+            cursor.execute("SELECT `id`, `username` FROM users WHERE `id` = ?", (cursor.lastrowid, ))
             data = cursor.fetchone()
 
             conn.commit()
-        except:
-            raise Exception("Account already exists")
+        except sqlite3.IntegrityError as err:
+            raise Exception('User already exists')
+        except Exception as exc:
+            print(str(exc))
+            raise Exception('Something went wrong')
         finally:
             cursor.close()
 
-        return cls(data[0], data[1], data[2])
+        return cls(data[0], data[1])
 
     @classmethod
     def readAll(cls):
@@ -68,7 +66,7 @@ Users().show()
         cursor = conn.cursor()
 
         try:
-            cursor.execute("UPDATE `users` SET user_name = ? WHERE id = ?", (userName, ))
+            cursor.execute("UPDATE `users` SET username = ? WHERE id = ?", (userName, ))
             cursor.execute("UPDATE `users` SET password = ? WHERE id = ?", (password, ))
             conn.commit()
         except:
