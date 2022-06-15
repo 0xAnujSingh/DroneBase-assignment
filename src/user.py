@@ -2,12 +2,14 @@ import sys
 sys.path.append('/home/anuj/Desktop/droneBase')
 
 import sqlite3
+import bcrypt
+
 from database.db import conn
 
 class User:
-    def __init__(self, id, userName):
-        self.id = id 
-        self.username = userName
+    def __init__(self, username, id = None):
+        self.id = id
+        self.username = username
 
     @classmethod
     def createNew(cls, userName, password):
@@ -15,7 +17,9 @@ class User:
         data = None
 
         try:
-            cursor.execute("INSERT INTO users(`username`, `password`) VALUES (?,?);", (userName, password))
+            hashedPassword = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+            cursor.execute("INSERT INTO users(`username`, `password`) VALUES (?,?);", (userName, hashedPassword))
             cursor.execute("SELECT `id`, `username` FROM users WHERE `id` = ?", (cursor.lastrowid, ))
             data = cursor.fetchone()
 
@@ -28,7 +32,26 @@ class User:
         finally:
             cursor.close()
 
-        return cls(data[0], data[1])
+        return cls(id=data[0], username=data[1])
+
+    @classmethod
+    def findByUsername(cls, username):
+        cursor = conn.cursor()
+        data = None
+
+        try:
+            cursor.execute("SELECT `id`, `username` FROM users WHERE `username` = ? limit 1", (username, ))
+            data = cursor.fetchone()
+        except Exception as e:
+            print(e)
+            raise Exception("Something went wrong")
+        finally:
+            cursor.close()
+
+        if data is None:
+            raise Exception('User not found')
+        
+        return cls(id=data[0], username=data[1])
 
     @classmethod
     def readAll(cls):
@@ -37,7 +60,7 @@ class User:
         result = []
 
         try:
-            cursor.execute("SELECT * FROM `users`")
+            cursor.execute("SELECT id, username FROM `users`")
             data = cursor.fetchall()
 
         except:
@@ -46,32 +69,49 @@ class User:
             cursor.close()
 
         for i in data:
-            result.append(cls(i[0], i[1], i[2]))
+            result.append(cls(id=i[0], username=i[1]))
         return result
+
+    @classmethod
+    def delete(cls, id):
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("DELETE FROM `users` WHERE id = ?", (id, ))
+            conn.commit()
+        except:
+            raise Exception("User with this id doesn't exists ")
+        finally:
+            cursor.close()
+
+    @classmethod
+    def update(cls, id, username = None, password = None):
+        cursor = conn.cursor()
+
+        try:
+            if username is not None:
+                cursor.execute("UPDATE `users` SET username = ? WHERE id = ?", (username, id))
+            if password is not None:
+                cursor.execute("UPDATE `users` SET password = ? WHERE id = ?", (password, id))
+            
+            conn.commit()
+        except:
+            raise Exception("User with this id doesn't exists ")
+        finally:
+            cursor.close()
+
+    def checkPassword(self, password):
+        query = 'select id, password from users where username = ? limit 1;'
+
+        cursor = conn.cursor()
+        cursor.execute(query, (self.username, ))
+
+        data = cursor.fetchone()
         
-    @classmethod
-    def delete(cls):
-        cursor = conn.cursor()
+        if (data is None):
+            raise Exception("User not found")
 
-        try:
-            cursor.execute("DELETE FROM `users` WHERE id = ?")
-            conn.commit()
-        except:
-            raise Exception("User with this id doesn't exists ")
-        finally:
-            cursor.close()
-
-    @classmethod
-    def update(cls, userName, password):
-        cursor = conn.cursor()
-
-        try:
-            cursor.execute("UPDATE `users` SET username = ? WHERE id = ?", (userName, ))
-            cursor.execute("UPDATE `users` SET password = ? WHERE id = ?", (password, ))
-            conn.commit()
-        except:
-            raise Exception("User with this id doesn't exists ")
-        finally:
-            cursor.close()
-
-
+        self.id = data[0]
+        userPassword = data[1]
+        
+        return bcrypt.checkpw(password.encode('utf-8'), userPassword)
