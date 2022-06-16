@@ -1,3 +1,7 @@
+from genericpath import exists
+from dotenv import load_dotenv
+load_dotenv()
+
 from user import User
 from api import getWeather, validate
 from getpass import getpass
@@ -58,9 +62,16 @@ while True:
         userName = input("Enter your username: ")
         password = getpass(prompt="Enter your password: ")
         
-         
-        users = User.createNew(userName, password)
-        print(f"New user is created {userName}")
+        is_exists = User.findByUsername(userName)
+        if (is_exists == False):
+            users = User.createNew(userName, password)
+            print(f"New user is created {userName}")
+            continue
+
+        print("User already exists")  
+  
+        # users = User.createNew(userName, password)
+        # print(f"New user is created {userName}")
 
     elif cmd == "updateUser" or cmd == "2":
         id = int(input("Enter your Id: "))

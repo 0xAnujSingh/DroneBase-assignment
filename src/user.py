@@ -49,6 +49,7 @@ class User:
             cursor.close()
 
         if data is None:
+            return False
             raise Exception('User not found')
         
         return cls(id=data[0], username=data[1])

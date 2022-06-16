@@ -21,7 +21,11 @@ create new user, delete user, udpate user, read all user.
 
 ### `test_user.py`
 In this file, I have written following unit tests.
-create new user 
+Create new user -> In this function, I have written a logic for new user and for existing user. If user is already exists then it will show error, if not then it will create a new user.
+
+Update user -> This will check that the existing user will updated or not, if user does not exists then it will show error.
+
+Read all user, Check password, Delete user.
 
 ### `cli.py`
-This file has the controlling logic for whole application
+This file has the controlling logic for whole application.

@@ -1,3 +1,4 @@
+from pickletools import uint1
 import sys
 from turtle import update
 sys.path.append('/home/anuj/Desktop/droneBase')
@@ -48,7 +49,6 @@ class UserQueryTests(unittest.TestCase):
         result = User.findByUsername("test_user")
         self.assertEqual(result.username, "test_user")
 
-
 class UserCheckPasswordTests(unittest.TestCase):
     def setUp(self):
         username = 'test_user'
@@ -98,6 +98,46 @@ class UserReadAllTests(unittest.TestCase):
 
         result = User.readAll()
         self.assertEqual(len(result), 2)
+
+class UserDeleteTests(unittest.TestCase):
+    def setup(self):
+        username = 'test_user'
+        password = 'secret'
+        hash_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+        conn.execute("delete from users")
+        conn.execute("insert into users(`username`, `password`) values(?, ?)", (username, hash_password))
+        conn.commit()
+
+    def test_user_not_exists_delete(self):
+        try:
+            result = User.delete("abc")
+        except Exception as err:
+            self.assertEqual(str(err), "User not found")
+
+    def test_user_exists_delete(self):
+        result = User.delete("test_user")
+        self.assertEqual(result, None)
+
+class UserUpdateTests(unittest.TestCase):
+    def setup(self):
+        username = 'test_user'
+        password = 'secret'
+        hash_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+        conn.execute("delete from users")
+        conn.execute("insert into users(`username`, `password`) values(?, ?)", (username, hash_password))
+        conn.commit()
+
+    def test_user_not_exists_update(self):
+        try:
+            result = User.update("abc")
+        except Exception as err:
+            self.assertEqual(str(err), "User not found")
+
+    def test_user_exists_update(self):
+        result = User.update("xyz")
+        self.assertEqual(result, None)
 
 if __name__ == "__main__":
     unittest.main()

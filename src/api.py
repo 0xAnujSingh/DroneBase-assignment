@@ -1,8 +1,9 @@
 import requests, json
 import datetime
+import os
 
 BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
-API_KEY = "eede56c9de2ca2b0bc5d104f8803a8e3"
+API_KEY = os.getenv('API_KEY')
 
 def validate(date): 
    # date = input("Enter date for scheduled fight (in DD/MM/YYYY): ")
