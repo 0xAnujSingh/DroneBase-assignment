@@ -1,6 +1,3 @@
-import sys
-sys.path.append('/home/anuj/Desktop/droneBase')
-
 import unittest
 import bcrypt
 

@@ -1,6 +1,3 @@
-import sys
-sys.path.append('/home/anuj/Desktop/droneBase')
-
 import sqlite3
 import bcrypt
 
