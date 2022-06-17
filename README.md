@@ -29,3 +29,11 @@ Read all user, Check password, Delete user.
 
 ### `cli.py`
 This file has the controlling logic for whole application.
+
+```
+which poetry
+poetry install
+poetry shell
+python database/seed.py
+python src/cli.py
+```
