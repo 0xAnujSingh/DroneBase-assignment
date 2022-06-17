@@ -6,11 +6,9 @@ BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
 API_KEY = os.getenv('API_KEY')
 
 def validate(date): 
-   # date = input("Enter date for scheduled fight (in DD/MM/YYYY): ")
    ex_date = datetime.datetime.strptime(date, "%d/%m/%Y")
    try:
       dt = datetime.datetime.now()
-      # print(dt)
       datetime.datetime.strptime(date, '%d/%m/%Y')
       if ex_date > dt:
          return 1

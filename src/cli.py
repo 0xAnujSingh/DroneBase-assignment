@@ -1,11 +1,9 @@
-from genericpath import exists
 from dotenv import load_dotenv
 load_dotenv()
 
 from user import User
 from api import getWeather, validate
 from getpass import getpass
-
 
 def login():
     print("Login to use the app:")
@@ -69,9 +67,6 @@ while True:
             continue
 
         print("User already exists")  
-  
-        # users = User.createNew(userName, password)
-        # print(f"New user is created {userName}")
 
     elif cmd == "updateUser" or cmd == "2":
         id = int(input("Enter your Id: "))
@@ -91,7 +86,6 @@ while True:
         else:
             print("Command not supported")
             continue
-
         
         print("Updated")
 
@@ -115,7 +109,7 @@ while True:
     elif cmd == "getWeather" or cmd == "5":
         flag = 0
         while flag == 0:
-            date = input("Enter date for scheduled flight: ")
+            date = input("Enter date for scheduled flight (in DD/MM/YYYY): ")
             flag = validate(date)
 
         city = input("Enter city name: ")
