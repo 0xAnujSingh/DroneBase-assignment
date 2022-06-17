@@ -19,12 +19,12 @@ class User:
         try:
             hashedPassword = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
-            cursor.execute("INSERT INTO users(`username`, `password`) VALUES (?,?);", (userName, hashedPassword))
+            cursor.execute("INSERT INTO users(`username`, `password`) VALUES (?,?);", (userName, hashedPassword.decode()))
             cursor.execute("SELECT `id`, `username` FROM users WHERE `id` = ?", (cursor.lastrowid, ))
             data = cursor.fetchone()
 
             conn.commit()
-        except sqlite3.IntegrityError as err:
+        except sqlite3.IntegrityError:
             raise Exception('User already exists')
         except Exception as exc:
             print(str(exc))
@@ -43,13 +43,11 @@ class User:
             cursor.execute("SELECT `id`, `username` FROM users WHERE `username` = ? limit 1", (username, ))
             data = cursor.fetchone()
         except Exception as e:
-            print(e)
             raise Exception("Something went wrong")
         finally:
             cursor.close()
 
         if data is None:
-            return False
             raise Exception('User not found')
         
         return cls(id=data[0], username=data[1])
@@ -93,7 +91,9 @@ class User:
             if username is not None:
                 cursor.execute("UPDATE `users` SET username = ? WHERE id = ?", (username, id))
             if password is not None:
-                cursor.execute("UPDATE `users` SET password = ? WHERE id = ?", (password, id))
+                hash_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+                cursor.execute("UPDATE `users` SET password = ? WHERE id = ?", (hash_password.decode(), id))
             
             conn.commit()
         except:
@@ -115,4 +115,4 @@ class User:
         self.id = data[0]
         userPassword = data[1]
         
-        return bcrypt.checkpw(password.encode('utf-8'), userPassword)
+        return bcrypt.checkpw(password.encode('utf-8'), userPassword.encode('utf-8'))

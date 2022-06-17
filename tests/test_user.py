@@ -1,6 +1,4 @@
-from pickletools import uint1
 import sys
-from turtle import update
 sys.path.append('/home/anuj/Desktop/droneBase')
 
 import unittest
@@ -9,11 +7,24 @@ import bcrypt
 from src.user import User
 from database.db import conn
 
-# Arrange, Act, Assert
+def clearTestUsers():
+    conn.execute("delete from users")
+    conn.commit()
+
+def createTestUser():
+    cursor = conn.cursor()
+
+    username = 'test_user'
+    password = 'secret'
+    hash_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    cursor.execute("insert into users(`username`, `password`) values(?, ?)", (username, hash_password.decode()))
+    conn.commit()
+
+    return User(username=username, id=cursor.lastrowid)
+
 class UserTests(unittest.TestCase):
     def setUp(self):
-        conn.execute('delete from users;')
-        conn.commit()
+        clearTestUsers()
 
     def test_create_new_user(self):
         result = User.createNew("abc", "afaf")
@@ -31,13 +42,8 @@ class UserTests(unittest.TestCase):
 
 class UserQueryTests(unittest.TestCase):
     def setUp(self):
-        username = 'test_user'
-        password = 'secret'
-        hash_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-        conn.execute("delete from users")
-        conn.execute("insert into users(`username`, `password`) values(?, ?)", (username, hash_password))
-        conn.commit()
+        clearTestUsers()
+        createTestUser()
 
     def test_user_not_exists(self):
         try:
@@ -51,13 +57,8 @@ class UserQueryTests(unittest.TestCase):
 
 class UserCheckPasswordTests(unittest.TestCase):
     def setUp(self):
-        username = 'test_user'
-        password = 'secret'
-        hash_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-        conn.execute("delete from users")
-        conn.execute("insert into users(`username`, `password`) values(?, ?)", (username, hash_password))
-        conn.commit()
+        clearTestUsers()
+        createTestUser()
 
     def test_check_password(self):
         user = User(username='test_user')
@@ -83,8 +84,7 @@ class UserCheckPasswordTests(unittest.TestCase):
 
 class UserReadAllTests(unittest.TestCase):
     def setUp(self):
-        conn.execute("delete from users")
-       
+        clearTestUsers()
 
     def test_read_all(self):
         password = 'secret'
@@ -100,14 +100,9 @@ class UserReadAllTests(unittest.TestCase):
         self.assertEqual(len(result), 2)
 
 class UserDeleteTests(unittest.TestCase):
-    def setup(self):
-        username = 'test_user'
-        password = 'secret'
-        hash_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-        conn.execute("delete from users")
-        conn.execute("insert into users(`username`, `password`) values(?, ?)", (username, hash_password))
-        conn.commit()
+    def setUp(self):
+        clearTestUsers()
+        createTestUser()
 
     def test_user_not_exists_delete(self):
         try:
@@ -120,14 +115,9 @@ class UserDeleteTests(unittest.TestCase):
         self.assertEqual(result, None)
 
 class UserUpdateTests(unittest.TestCase):
-    def setup(self):
-        username = 'test_user'
-        password = 'secret'
-        hash_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-        conn.execute("delete from users")
-        conn.execute("insert into users(`username`, `password`) values(?, ?)", (username, hash_password))
-        conn.commit()
+    def setUp(self):
+        clearTestUsers()
+        self.testUser = createTestUser()
 
     def test_user_not_exists_update(self):
         try:
@@ -135,10 +125,23 @@ class UserUpdateTests(unittest.TestCase):
         except Exception as err:
             self.assertEqual(str(err), "User not found")
 
-    def test_user_exists_update(self):
-        result = User.update("xyz")
-        self.assertEqual(result, None)
+    def test_user_exists_update_username(self):
+        newUsername = 'new_username' 
+        User.update(id=self.testUser.id, username=newUsername)
+        
+        cursor = conn.cursor()
+        query = 'select username from users where id = ?'
+        cursor.execute(query, (self.testUser.id, ))
+
+        updatedUser = cursor.fetchone()
+        
+        self.assertEqual(updatedUser[0], newUsername)
+
+    def test_user_exists_update_password(self):
+        newPassword = 'new_password' 
+        User.update(id=self.testUser.id, password=newPassword)
+
+        self.assertTrue(self.testUser.checkPassword(newPassword))
 
 if __name__ == "__main__":
     unittest.main()
-
